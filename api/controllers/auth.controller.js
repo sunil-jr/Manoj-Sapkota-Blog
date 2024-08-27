@@ -27,14 +27,17 @@ export const signup = async (req, res, next) => {
 };
 
 export const signin = async (req, res, next) =>{
-    const {email, password} = req.body;
+    const {emailOrUsername, password} = req.body;
 
-    if (!email || !password || email === "" || password === ""){
+    if (!emailOrUsername || !password || emailOrUsername.trim() === "" || password.trim() === ""){
         return next(errorHandler(400, "All fields are required"));
     }
 
     try{
-        const validUser = await User.findOne({email});
+        const validUser = await User.findOne({
+            $or: [{ email: emailOrUsername }, { username: emailOrUsername }]
+        });
+;
         if(!validUser){
             return next(errorHandler(400, "Invalid Credentials"));
         }
@@ -50,6 +53,8 @@ export const signin = async (req, res, next) =>{
                     id: validUser._id,
                     username: validUser.username,
                     email: validUser.email,
+                    createdAt: validUser.createdAt,
+                    updatedAt: validUser.updatedAt,
                 }
             });
     }catch(err){
